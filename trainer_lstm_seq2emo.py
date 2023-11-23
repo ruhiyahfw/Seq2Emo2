@@ -387,6 +387,10 @@ def train(X_train, y_train, X_dev, y_dev, X_test, y_test):
         logger('Multi only: h_loss:', metric[0], 'macro F', metric[1], 'micro F', metric[4])
         # show_classification_report(binary_gold, binary_preds)
         logger('Jaccard:', jaccard_score(gold, preds))
+
+        # Save model
+        torch.save(model.state_dict(), f"model_{args.dataset}.pt")
+    
         return binary_gold, binary_preds
 
 
