@@ -20,7 +20,7 @@ import utils.nn_utils as nn_utils
 from utils.others import find_majority
 from utils.file_logger import get_file_logger
 
-MODEL_NAME=""
+MODEL_NAME="model_sem18.pt"
 
 # Argument parser
 parser = argparse.ArgumentParser(description='Options')
