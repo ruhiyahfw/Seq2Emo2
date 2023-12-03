@@ -67,6 +67,7 @@ parser.add_argument('--attention_type', type=str, default="luong", choices=['tra
 parser.add_argument('--load_emo_emb', action='store_true')
 parser.add_argument('--shuffle_emo', type=str, default=None)
 parser.add_argument('--single_direction', action='store_true')
+parser.add_argument('--model_path', type=str)
 args = parser.parse_args()
 
 if args.log_path is not None:
@@ -188,7 +189,7 @@ model = LSTMSeq2Seq(
     args=args
 )
 
-model.load_state_dict(torch.load(MODEL_NAME))
+model.load_state_dict(torch.load(args.model_path))
 model.eval()
 
 model.load_encoder_embedding(glove_tokenizer.get_embeddings(), fix_emb=args.fix_emb)
