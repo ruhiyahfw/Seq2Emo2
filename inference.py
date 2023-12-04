@@ -258,6 +258,15 @@ logger('Multi only: h_loss:', metric[0], 'macro F', metric[1], 'micro F', metric
 # show_classification_report(binary_gold, binary_preds)
 logger('Jaccard:', jaccard_score(gold, preds))
 
+with open("preds.txt","w") as fh:
+    for pred in preds:
+        fh.write(str(pred)+"\n")
+
+with open("golds.txt","w") as fh:
+    for x in gold:
+        fh.write(str(x)+"\n")
+    
+
 def read_sem18(file_name):
     emotion_list = ["anger", "anticipation", "disgust", "fear", "joy", "love",
                     "optimism", "pessimism", "sadness", "surprise", "trust"]
