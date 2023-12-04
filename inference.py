@@ -103,6 +103,7 @@ np.random.seed(RANDOM_SEED)
 random.seed(RANDOM_SEED)
 
 
+
 # Init Elmo model
 if args.download_elmo:
     options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway/elmo_2x4096_512_2048cnn_2xhighway_options.json"
@@ -140,6 +141,7 @@ else:
 
 NUM_EMO = len(EMOS)
 
+
 class TestDataReader(Dataset):
     def __init__(self, X, pad_len):
         self.glove_ids = []
@@ -159,7 +161,23 @@ class TestDataReader(Dataset):
     def __getitem__(self, idx):
         return torch.LongTensor(self.glove_ids[idx]), \
                torch.LongTensor([self.glove_ids_len[idx]])
-    
+
+
+class TrainDataReader(TestDataReader):
+    def __init__(self, X, y, pad_len):
+        super(TrainDataReader, self).__init__(X, pad_len)
+        self.y = []
+        self.read_target(y)
+
+    def read_target(self, y):
+        self.y = y
+
+    def __getitem__(self, idx):
+        return torch.LongTensor(self.glove_ids[idx]), \
+               torch.LongTensor([self.glove_ids_len[idx]]), \
+               torch.LongTensor(self.y[idx])
+
+
 def elmo_encode(ids):
     data_text = [glove_tokenizer.decode_ids(x) for x in ids]
     with torch.no_grad():
@@ -167,7 +185,29 @@ def elmo_encode(ids):
         elmo_emb = elmo(character_ids)['elmo_representations']
         elmo_emb = (elmo_emb[0] + elmo_emb[1]) / 2  # avg of two layers
     return elmo_emb
-    
+
+
+def show_classification_report(gold, pred):
+    from sklearn.metrics import classification_report
+    logger(classification_report(gold, pred, target_names=EMOS, digits=4))
+
+if args.shuffle_emo is not None:
+    new_order = np.asarray([int(tmp) for tmp in args.shuffle_emo.split()])
+    y_train_dev = np.asarray(y_train_dev).T[new_order].T
+    y_test = np.asarray(y_test).T[new_order].T
+
+glove_tokenizer.build_tokenizer(X_train_dev + X_test, vocab_size=VOCAB_SIZE)
+glove_tokenizer.build_embedding(GLOVE_EMB_PATH, dataset_name=data_set_name)
+
+from sklearn.model_selection import ShuffleSplit, KFold
+
+kf = KFold(n_splits=args.folds, random_state=args.dev_split_seed, shuffle=True)
+# kf.get_n_splits(X_train_dev)
+
+all_preds = []
+gold_list = None
+
+print('test', X_test[0])   
 test_set = TestDataReader(X_test, MAX_LEN_DATA)
 test_loader = DataLoader(test_set, batch_size=BATCH_SIZE*3, shuffle=False)
 
